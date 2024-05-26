@@ -5,10 +5,20 @@ from textwrap import dedent
 from crewai import Agent
 from .tools import CreateDraftTool
 from tenacity import retry, wait_fixed, stop_after_attempt  # Import retry and timeout handling
+import os
+import logging
+from langchain_openai import ChatOpenAI  # Import ChatOpenAI
+
+# Set the environment variable for the OpenAI model
+os.environ["OPENAI_MODEL_NAME"] = "gpt-3.5-turbo"
 
 class EmailFilterAgents():
     def __init__(self):
         self.gmail = GmailToolkit()
+        # attempt to add to use openai_model
+        self.model = os.environ["OPENAI_MODEL_NAME"]="gpt-3.5-turbo"
+        self.llm = ChatOpenAI(model=self.model) # use chatgot specific model
+        logging.info(f"Using model: {self.model}")
 
     @retry(wait=wait_fixed(2), stop=stop_after_attempt(5))  # Retry up to 5 times with a 2-second wait between attempts
     def get_thread(self, thread_id):
@@ -24,7 +34,8 @@ class EmailFilterAgents():
                 You are adept at distinguishing important emails from spam, newsletters, and other
                 irrelevant content. Your expertise lies in identifying key patterns and markers that
                 signify the importance of an email."""),
-            verbose=True,
+            llm=self.llm,  # Set the LLM here
+			verbose=True,
             allow_delegation=False,
             tools=[]  # Ensure tools attribute is present even if empty
         )
@@ -37,7 +48,8 @@ class EmailFilterAgents():
                 With a keen eye for detail and a knack for understanding context, you specialize
                 in identifying emails that require immediate action. Your skill set includes interpreting
                 the urgency and importance of an email based on its content and context."""),
-            tools=[
+            llm=self.llm,  # Set the LLM here
+			tools=[
                 GmailGetThread(api_resource=self.gmail.api_resource),  # Use GmailGetThread directly
                 TavilySearchResults()
             ],
@@ -53,7 +65,8 @@ class EmailFilterAgents():
                 You are a skilled writer, adept at crafting clear, concise, and effective email responses.
                 Your strength lies in your ability to communicate effectively, ensuring that each response is
                 tailored to address the specific needs and context of the email."""),
-            tools=[
+            llm=self.llm,  # Set the LLM here
+			tools=[
                 TavilySearchResults(),
                 GmailGetThread(api_resource=self.gmail.api_resource),  # Use GmailGetThread directly
                 CreateDraftTool.create_draft  # Tool for creating drafts

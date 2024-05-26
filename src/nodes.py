@@ -16,10 +16,11 @@ class Nodes():
     def check_email(self, state):
         logging.info("Checking for new emails")  # Log the beginning of the email check process
         search = GmailSearch(api_resource=self.gmail.api_resource)
-        emails = search('after:newer_than:1d')
-        checked_emails = state['checked_emails_ids'] if state['checked_emails_ids'] else []
+        emails = search('after:newer_than:1d') #define which emaisl to find
+        checked_emails = state['checked_emails_ids'] if state['checked_emails_ids'] else [] # check the state of emails already searched
         thread = []
         new_emails = []
+        # Store emails in a thread to respond to them later
         for email in emails:
             if (email['id'] not in checked_emails) and (email['threadId'] not in thread) and (os.environ['MY_EMAIL'] not in email['sender']):
                 thread.append(email['threadId'])
@@ -27,7 +28,7 @@ class Nodes():
                     {
                         "id": email['id'],
                         "threadId": email['threadId'],
-                        "snippet": email['snippet'],
+                        "snippet": email['snippet'], # stores only part of the email
                         "sender": email["sender"]
                     }
                 )
