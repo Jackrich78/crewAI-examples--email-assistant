@@ -6,6 +6,10 @@ from langgraph.graph import StateGraph
 from .state import EmailsState
 from .nodes import Nodes
 from .crew.crew import EmailFilterCrew
+import logging
+
+# Configure logging to silence specific googleapiclient warnings
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 
 class WorkFlow():
 	def __init__(self):
